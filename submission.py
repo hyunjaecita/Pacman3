@@ -149,77 +149,73 @@ class MinimaxAgent(MultiAgentSearchAgent):
           self.depth directly (e.g., when implementing depth-limited search) since it
           is a member variable that should stay fixed throughout runtime.
 
-          Here are some method calls that might be useful when implementing minimax.
-
-          gameState.getLegalActions(agentIndex):
-            Returns a list of legal actions for an agent
-            agentIndex=0 means Pacman, ghosts are >= 1
-
-          gameState.generateSuccessor(agentIndex, action):
-            Returns the successor game state after an agent takes an action
-
-          gameState.getNumAgents():
-            Returns the total number of agents in the game
-
-          gameState.getScore():
-            Returns the score corresponding to the current state of the game
-
-          gameState.isWin():
-            Returns True if it's a winning state
-
-          gameState.isLose():
-            Returns True if it's a losing state
-
-          self.depth:
-            The depth to which search should continue
-
         """
-        PACMAN = 0
 
-        def max_agent(state, depth):
-            if state.isWin() or state.isLose():
-                return state.getScore()
+        # Definimos constantes para la identificación de los agentes
+        PACMAN = 0
+        GHOST = 1
+
+        def minimax(state, depth, agentIndex):
+            """
+                Función recursiva principal del algoritmo MiniMax.
+                Alterna entre funciones de maximización (Pacman) y minimización (Fantasma),
+                controlando la profundidad.
+            """
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state)
+
+            if agentIndex == PACMAN:
+                return max_value(state, depth)
+            else:
+                return min_value(state, depth)
+
+
+        def max_value(state, depth):
+            """
+                Función MAX para el turno de Pacman.
+                Busca la acción que maximiza el resultado esperado.
+            """
             actions = state.getLegalActions(PACMAN)
-            best_score = float("-inf")
-            score = best_score
+            best_score = float("-inf") # Inicializamos al peor caso posible
             best_action = Directions.STOP
+
             for action in actions:
-                score = exp_agent(state.generateSuccessor(PACMAN, action), depth, 1)
+                # Generamos el estado sucesor si Pacman realiza esta acción
+                successor = state.generateSuccessor(PACMAN, action)
+                score = minimax(successor, depth, GHOST)  # Llamamos a minimax para el siguiente agente: el fantasma
+
+                # Si el valor obtenido es mejor, actualiza el mejor
                 if score > best_score:
                     best_score = score
                     best_action = action
-            if depth == 0:
+
+            if depth == 0:  # Si estamos en el primer nivel de profundidad, devolvemos la acción
                 return best_action
-            else:
+            else:  # En otros niveles, devolvemos la mejor puntuación
                 return best_score
 
-        def exp_agent(state, depth, ghost):
-            if state.isLose() or state.isWin():
-                return state.getScore()
-            next_ghost = ghost + 1
-            if ghost == state.getNumAgents() - 1:
-                # Although I call this variable next_ghost, at this point we are referring to a pacman agent.
-                # I never changed the variable name and now I feel bad. That's why I am writing this guilty comment :(
-                next_ghost = PACMAN
-            actions = state.getLegalActions(ghost)
-            best_score = float("inf")
-            score = best_score
+        def min_value(state, depth):
+            """
+               Función MIN para el turno del fantasma.
+               Busca la acción que minimiza la ganancia de Pacman.
+            """
+            best_score = float("inf") # Inicializamos al mejor caso para MIN (peor para Pacman)
+            actions = state.getLegalActions(GHOST)
+
             for action in actions:
-                if next_ghost == PACMAN:  # We are on the last ghost and it will be Pacman's turn next.
-                    if depth == self.depth - 1:
-                        score = self.evaluationFunction(state.generateSuccessor(ghost, action))
-                    else:
-                        score = max_agent(state.generateSuccessor(ghost, action), depth + 1)
-                else:
-                    score = exp_agent(state.generateSuccessor(ghost, action), depth, next_ghost)
+                # Generamos el estado sucesor si el fantasma realiza esta acción
+                successor = state.generateSuccessor(GHOST, action)
+                # Ahora es turno de Pacman, por lo tanto aumentamos la profundidad
+                score = minimax(successor, depth + 1, PACMAN)
+
                 if score < best_score:
                     best_score = score
+
             return best_score
 
-        return max_agent(gameState, 0)
+        return max_value(gameState, 0)
 
 
-        # END_YOUR_CODE
 
 ######################################################################################
 # Problem 2a: implementing alpha-beta
@@ -237,53 +233,60 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         PACMAN = 0
-        def max_agent(state, depth, alpha, beta):
-            if state.isWin() or state.isLose():
-                return state.getScore()
+        GHOST = 1
+
+        def alphabeta(state, depth, agentIndex, alpha, beta):
+            # Caso terminal: victoria, derrota o profundidad máxima
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state)
+
+            if agentIndex == PACMAN:
+                return max_value(state, depth, alpha, beta)
+            else:
+                return min_value(state, depth, alpha, beta)
+
+        def max_value(state, depth, alpha, beta):
+
             actions = state.getLegalActions(PACMAN)
             best_score = float("-inf")
-            score = best_score
             best_action = Directions.STOP
+
             for action in actions:
-                score = min_agent(state.generateSuccessor(PACMAN, action), depth, 1, alpha, beta)
+                successor = state.generateSuccessor(PACMAN, action)
+                score = alphabeta(successor, depth, GHOST, alpha, beta)
+
                 if score > best_score:
                     best_score = score
                     best_action = action
+
                 alpha = max(alpha, best_score)
-                if best_score > beta:
-                    return best_score
+                if alpha >= beta:
+                    break
+
             if depth == 0:
                 return best_action
             else:
                 return best_score
 
-        def min_agent(state, depth, ghost, alpha, beta):
-            if state.isLose() or state.isWin():
-                return state.getScore()
-            next_ghost = ghost + 1
-            if ghost == state.getNumAgents() - 1:
-                # Although I call this variable next_ghost, at this point we are referring to a pacman agent.
-                # I never changed the variable name and now I feel bad. That's why I am writing this guilty comment :(
-                next_ghost = PACMAN
-            actions = state.getLegalActions(ghost)
+        def min_value(state, depth, alpha, beta):
+
+            actions = state.getLegalActions(GHOST)
             best_score = float("inf")
-            score = best_score
+
             for action in actions:
-                if next_ghost == PACMAN:  # We are on the last ghost and it will be Pacman's turn next.
-                    if depth == self.depth - 1:
-                        score = self.evaluationFunction(state.generateSuccessor(ghost, action))
-                    else:
-                        score = max_agent(state.generateSuccessor(ghost, action), depth + 1, alpha, beta)
-                else:
-                    score = min_agent(state.generateSuccessor(ghost, action), depth, next_ghost, alpha, beta)
+                successor = state.generateSuccessor(GHOST, action)
+                score = alphabeta(successor, depth + 1, PACMAN, alpha, beta)
+
                 if score < best_score:
                     best_score = score
                 beta = min(beta, best_score)
-                if best_score < alpha:
-                    return best_score
+
+                if beta <= alpha:
+                    break
+
             return best_score
 
-        return max_agent(gameState, 0, float("-inf"), float("inf"))
+        return alphabeta(gameState, 0, PACMAN, float('-inf'), float('inf'))
 
 
 ######################################################################################
@@ -358,9 +361,44 @@ def betterEvaluationFunction(currentGameState: GameState) -> float:
       Your extreme, unstoppable evaluation function (problem 4). Note that you can't fix a seed in this function.
     """
 
-    # BEGIN_YOUR_CODE (our solution is 16 lines of code, but don't worry if you deviate from this)
-    raise Exception("Not implemented yet")
-    # END_YOUR_CODE
+
+    def closest_dot(cur_pos, food_pos):
+        food_distances = []
+        for food in food_pos:
+            food_distances.append(util.manhattanDistance(food, cur_pos))
+        return min(food_distances) if len(food_distances) > 0 else 1
+
+    def closest_ghost(cur_pos, ghosts):
+        food_distances = []
+        for food in ghosts:
+            food_distances.append(util.manhattanDistance(food.getPosition(), cur_pos))
+        return min(food_distances) if len(food_distances) > 0 else 1
+
+    def ghost_stuff(cur_pos, ghost_states, radius, scores):
+        num_ghosts = 0
+        for ghost in ghost_states:
+            if util.manhattanDistance(ghost.getPosition(), cur_pos) <= radius:
+                scores -= 30
+                num_ghosts += 1
+        return scores
+
+    def food_stuff(cur_pos, food_positions):
+        food_distances = []
+        for food in food_positions:
+            food_distances.append(util.manhattanDistance(food, cur_pos))
+        return sum(food_distances)
+
+    def num_food(cur_pos, food):
+        return len(food)
+
+    pacman_pos = currentGameState.getPacmanPosition()
+    score = currentGameState.getScore()
+    food = currentGameState.getFood().asList()
+    ghosts = currentGameState.getGhostStates()
+
+    score = score * 2 if closest_dot(pacman_pos, food) < closest_ghost(pacman_pos, ghosts) + 3 else score
+    score -= .35 * food_stuff(pacman_pos, food)
+    return score
 
 
 # Abbreviation
