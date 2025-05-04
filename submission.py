@@ -267,7 +267,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return best_action
             else:
                 return best_score
-
+#
         def min_value(state, depth, alpha, beta):
 
             actions = state.getLegalActions(GHOST)
