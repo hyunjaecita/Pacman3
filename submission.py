@@ -319,7 +319,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
        All ghosts should be modeled as choosing uniformly at random from their
        legal moves.
      """
-     PACMAN = 0  # Índice del agente Pacman
+     PACMAN = 0
+     GHOST = 1
 
      def expectimax(state, depth, agentIndex):
          """
@@ -332,51 +333,46 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
          if agentIndex == PACMAN:
              return max_value(state, depth)
          else:
-             return exp_value(state, depth, agentIndex)
+             return exp_value(state, depth)
 
      def max_value(state, depth):
-         if state.isWin() or state.isLose():
-             return state.getScore()
+         """
+             Turno de Pacman: nodo MAX. Se escoge la acción con el mayor valor esperado.
+         """
          actions = state.getLegalActions(PACMAN)
          best_score = float("-inf")
-         score = best_score
          best_action = Directions.STOP
+
          for action in actions:
-             score = min_agent(state.generateSuccessor(PACMAN, action), depth, 1)
+             successor = state.generateSuccessor(PACMAN, action)
+             score = expectimax(successor, depth, GHOST)
+
              if score > best_score:
                  best_score = score
                  best_action = action
+
          if depth == 0:
              return best_action
          else:
              return best_score
 
-     def exp_value(state, depth, ghost):
-         if state.isLose():
-             return state.getScore()
-         next_ghost = ghost + 1
-         if ghost == state.getNumAgents() - 1:
-             # Although I call this variable next_ghost, at this point we are referring to a pacman agent.
-             # I never changed the variable name and now I feel bad. That's why I am writing this guilty comment :(
-             next_ghost = PACMAN
-         actions = state.getLegalActions(ghost)
-         best_score = float("inf")
-         score = best_score
-         for action in actions:
-             prob = 1.0 / len(actions)
-             if next_ghost == PACMAN:  # We are on the last ghost and it will be Pacman's turn next.
-                 if depth == self.depth - 1:
-                     score = self.evaluationFunction(state.generateSuccessor(ghost, action))
-                     score += prob * score
-                 else:
-                     score = max_agent(state.generateSuccessor(ghost, action), depth + 1)
-                     score += prob * score
-             else:
-                 score = min_agent(state.generateSuccessor(ghost, action), depth, next_ghost)
-                 score += prob * score
-         return score
+     def exp_value(state, depth):
+         """
+           Función para el turno de los fantasmas (nodo EXPECTATION).
+           Calcula el valor esperado suponiendo elección uniforme entre acciones legales.
+         """
 
-     return max_agent(gameState, 0)
+         actions = state.getLegalActions(GHOST)
+         total_score = 0
+         prob = 1.0 / len(actions)  # Asumimos distribución uniforme
+
+         for action in actions:
+             successor = state.generateSuccessor(GHOST, action)
+             total_score += prob * expectimax(successor, depth + 1, PACMAN)  # Turno vuelve a Pacman
+
+         return total_score  # Valor esperado de todas las acciones posibles del fantasma
+
+     return expectimax(gameState, 0, PACMAN)
 
 ######################################################################################
 # Problem 4a (extra credit): creating a better evaluation function
