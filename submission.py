@@ -236,7 +236,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         GHOST = 1
 
         def alphabeta(state, depth, agentIndex, alpha, beta):
-            # Caso terminal: victoria, derrota o profundidad máxima
+            """
+                Función principal de búsqueda recursiva Alpha-Beta.
+            """
             if state.isWin() or state.isLose() or depth == self.depth:
                 return self.evaluationFunction(state)
 
@@ -246,20 +248,26 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return min_value(state, depth, alpha, beta)
 
         def max_value(state, depth, alpha, beta):
-
+            """
+                Función para el turno de Pacman (nodo MAX).
+                Elige la acción que maximiza el valor, y realiza poda cuando beta <= alpha.
+            """
             actions = state.getLegalActions(PACMAN)
             best_score = float("-inf")
             best_action = Directions.STOP
 
             for action in actions:
-                successor = state.generateSuccessor(PACMAN, action)
-                score = alphabeta(successor, depth, GHOST, alpha, beta)
+                successor = state.generateSuccessor(PACMAN, action) # Generamos el estado sucesor
+                score = alphabeta(successor, depth, GHOST, alpha, beta) # Llamada recursiva con el turno del fantasma
 
                 if score > best_score:
                     best_score = score
                     best_action = action
 
+                # Actualizamos alpha
                 alpha = max(alpha, best_score)
+
+                # Poda: si el valor actual ya es mayor o igual que beta, no seguimos explorando
                 if alpha >= beta:
                     break
 
@@ -267,20 +275,26 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return best_action
             else:
                 return best_score
-#
-        def min_value(state, depth, alpha, beta):
 
+        def min_value(state, depth, alpha, beta):
+            """
+                Función para el turno del fantasma (nodo MIN).
+                Elige la acción que minimiza el valor, y realiza poda cuando beta <= alpha.
+            """
             actions = state.getLegalActions(GHOST)
             best_score = float("inf")
 
             for action in actions:
                 successor = state.generateSuccessor(GHOST, action)
-                score = alphabeta(successor, depth + 1, PACMAN, alpha, beta)
+                score = alphabeta(successor, depth + 1, PACMAN, alpha, beta) # Turno vuelve a Pacman, profundidad +1
 
                 if score < best_score:
                     best_score = score
+
+                # Actualizamos beta
                 beta = min(beta, best_score)
 
+                # Poda: si el valor actual ya es mayor o igual que beta, no seguimos explorando
                 if beta <= alpha:
                     break
 
@@ -305,10 +319,22 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
        All ghosts should be modeled as choosing uniformly at random from their
        legal moves.
      """
+     PACMAN = 0  # Índice del agente Pacman
 
-     PACMAN = 0
+     def expectimax(state, depth, agentIndex):
+         """
+           Función principal de búsqueda recursiva Expectimax.
+           Cambia entre MAX (Pacman) y EXP (fantasmas).
+         """
+         if state.isWin() or state.isLose() or depth == self.depth:
+             return self.evaluationFunction(state)
 
-     def max_agent(state, depth):
+         if agentIndex == PACMAN:
+             return max_value(state, depth)
+         else:
+             return exp_value(state, depth, agentIndex)
+
+     def max_value(state, depth):
          if state.isWin() or state.isLose():
              return state.getScore()
          actions = state.getLegalActions(PACMAN)
@@ -325,7 +351,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
          else:
              return best_score
 
-     def min_agent(state, depth, ghost):
+     def exp_value(state, depth, ghost):
          if state.isLose():
              return state.getScore()
          next_ghost = ghost + 1
@@ -360,46 +386,6 @@ def betterEvaluationFunction(currentGameState: GameState) -> float:
     """
       Your extreme, unstoppable evaluation function (problem 4). Note that you can't fix a seed in this function.
     """
-
-
-    def closest_dot(cur_pos, food_pos):
-        food_distances = []
-        for food in food_pos:
-            food_distances.append(util.manhattanDistance(food, cur_pos))
-        return min(food_distances) if len(food_distances) > 0 else 1
-
-    def closest_ghost(cur_pos, ghosts):
-        food_distances = []
-        for food in ghosts:
-            food_distances.append(util.manhattanDistance(food.getPosition(), cur_pos))
-        return min(food_distances) if len(food_distances) > 0 else 1
-
-    def ghost_stuff(cur_pos, ghost_states, radius, scores):
-        num_ghosts = 0
-        for ghost in ghost_states:
-            if util.manhattanDistance(ghost.getPosition(), cur_pos) <= radius:
-                scores -= 30
-                num_ghosts += 1
-        return scores
-
-    def food_stuff(cur_pos, food_positions):
-        food_distances = []
-        for food in food_positions:
-            food_distances.append(util.manhattanDistance(food, cur_pos))
-        return sum(food_distances)
-
-    def num_food(cur_pos, food):
-        return len(food)
-
-    pacman_pos = currentGameState.getPacmanPosition()
-    score = currentGameState.getScore()
-    food = currentGameState.getFood().asList()
-    ghosts = currentGameState.getGhostStates()
-
-    score = score * 2 if closest_dot(pacman_pos, food) < closest_ghost(pacman_pos, ghosts) + 3 else score
-    score -= .35 * food_stuff(pacman_pos, food)
-    return score
-
 
 # Abbreviation
 better = betterEvaluationFunction
