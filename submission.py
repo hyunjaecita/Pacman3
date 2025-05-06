@@ -176,6 +176,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 successor = state.generateSuccessor(PACMAN, action)
                 score = minimax(successor, depth, GHOST)  # Llamamos a minimax para el siguiente agente: el fantasma
 
+                # Penalización por quedarse parado
+                if action == Directions.STOP:
+                    score -= 5
+
+                # Penalización por no haber comido
+                if successor.getNumFood() == state.getNumFood():
+                    score -= 2
+
                 # Si el valor obtenido es mejor, actualiza el mejor
                 if score > best_score:
                     best_score = score
@@ -249,6 +257,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             for action in actions:
                 successor = state.generateSuccessor(PACMAN, action) # Generamos el estado sucesor
                 score = alphabeta(successor, depth, GHOST, alpha, beta) # Llamada recursiva con el turno del fantasma
+
+                # Penalización por quedarse parado
+                if action == Directions.STOP:
+                    score -= 5
+
+                # Penalización por no haber comido
+                if successor.getNumFood() == state.getNumFood():
+                    score -= 2
 
                 if score > best_score:
                     best_score = score
@@ -338,6 +354,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
          for action in actions:
              successor = state.generateSuccessor(PACMAN, action)
              score = expectimax(successor, depth, GHOST)
+
+             # Penalización por quedarse parado
+             if action == Directions.STOP:
+                 score -= 5
+
+             # Penalización por no haber comido
+             if successor.getNumFood() == state.getNumFood():
+                 score -= 2
 
              if score > best_score:
                  best_score = score
