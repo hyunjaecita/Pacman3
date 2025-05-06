@@ -136,20 +136,12 @@ class MultiAgentSearchAgent(Agent):
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
-      Your minimax agent (problem 1)
+        Implementación del agente MiniMax para Pacman,
+        este actúa como MAX, el fantasma como MIN.
+        Se utiliza profundidad limitada (self.depth) y evaluación heurística.
     """
 
     def getAction(self, gameState: GameState) -> str:
-        """
-          Returns the minimax action from the current gameState using self.depth
-          and self.evaluationFunction. Terminal states can be found by one of the following:
-          pacman won, pacman lost or there are no legal moves.
-
-          Don't forget to limit the search depth using self.depth. Also, avoid modifying
-          self.depth directly (e.g., when implementing depth-limited search) since it
-          is a member variable that should stay fixed throughout runtime.
-
-        """
 
         # Definimos constantes para la identificación de los agentes
         PACMAN = 0
@@ -223,14 +215,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
-      Your minimax agent with alpha-beta pruning (problem 2)
-      You may reference the pseudocode for Alpha-Beta pruning here:
-      en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning#Pseudocode
+    Agente que implementa el algoritmo MiniMax con poda Alpha-Beta.
     """
 
     def getAction(self, gameState: GameState) -> str:
         """
-          Returns the minimax action using self.depth and self.evaluationFunction
+            Devuelve la mejor acción para Pacman usando MiniMax con poda Alpha-Beta.
         """
         PACMAN = 0
         GHOST = 1
@@ -309,15 +299,17 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
-      Your expectimax agent (problem 3)
+        Agente basado en el algoritmo Expectimax (Problema 3).
+        Pacman actúa como nodo MAX (elige la mejor opción),
+        y los fantasmas como nodos de expectativa (eligen aleatoriamente).
     """
 
     def getAction(self, gameState: GameState) -> str:
      """
-       Returns the expectimax action using self.depth and self.evaluationFunction
-
-       All ghosts should be modeled as choosing uniformly at random from their
-       legal moves.
+       Devuelve la acción que Pacman debe realizar usando búsqueda Expectimax
+       hasta la profundidad indicada en self.depth.
+       Los fantasmas se modelan como agentes que eligen sus movimientos
+       al azar (uniformemente).
      """
      PACMAN = 0
      GHOST = 1
