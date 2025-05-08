@@ -369,11 +369,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 ######################################################################################
 # Problem 4a (extra credit): creating a better evaluation function
 
-
 def betterEvaluationFunction(currentGameState: GameState) -> float:
-    """
-      Your extreme, unstoppable evaluation function (problem 4). Note that you can't fix a seed in this function.
-    """
+    def closest_dot(cur_pos, food_pos):
+        food_distances = []
+        for food in food_pos:
+            food_distances.append(util.manhattanDistance(food, cur_pos))
+        return min(food_distances) if len(food_distances) > 0 else 1
+
+    def closest_ghost(cur_pos, ghosts):
+        food_distances = []
+        for food in ghosts:
+            food_distances.append(util.manhattanDistance(food.getPosition(), cur_pos))
+        return min(food_distances) if len(food_distances) > 0 else 1
+
+
+    def ghost_stuff(cur_pos, ghost_states, radius, scores):
+        num_ghosts = 0
+        for ghost in ghost_states:
+            if util.manhattanDistance(ghost.getPosition(), cur_pos) <= radius:
+                scores -= 30
+                num_ghosts += 1
+        return scores
+
+    def food_stuff(cur_pos, food_positions):
+        food_distances = []
+        for food in food_positions:
+            food_distances.append(util.manhattanDistance(food, cur_pos))
+        return sum(food_distances)
+
+    def num_food(cur_pos, food):
+        return len(food)
+
+    pacman_pos = currentGameState.getPacmanPosition()
+    score = currentGameState.getScore()
+    food = currentGameState.getFood().asList()
+    ghosts = currentGameState.getGhostStates()
+
+    score = score * 2 if closest_dot(pacman_pos, food) < closest_ghost(pacman_pos, ghosts) + 3 else score
+    score -= .35 * food_stuff(pacman_pos, food)
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
